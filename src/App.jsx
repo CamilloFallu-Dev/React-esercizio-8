@@ -4,15 +4,15 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // Crea un ref per il contenitore della chat
+  // Crea la ref
   const messagesEndRef = useRef(null);
 
-  // Funzione per scorrere automaticamente verso il basso quando ci sono nuovi messaggi
+  // Funzione per scorrere automaticamente verso il basso
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Eseguiamo lo scroll ogni volta che i messaggi cambiano
+  // esegue lo scroll ogni volta che i messaggi cambiano
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
