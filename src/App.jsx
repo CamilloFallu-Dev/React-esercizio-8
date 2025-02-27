@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect } from "react";
+import useSWR from "swr";
+
+// Funzione per fare fetch ai dati dal mock endpoint
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [userMessage, setUserMessage] = useState("");
 
   // Crea la ref
   const messagesEndRef = useRef(null);
@@ -12,11 +17,12 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // esegue lo scroll ogni volta che i messaggi cambiano
+  // Esegui lo scroll ogni volta che i messaggi cambiano
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Funzione per gestire l'invio dei messaggi
   const handleSendMessage = () => {
     if (input.trim()) {
       // Aggiungi il messaggio dell'utente alla lista dei messaggi
@@ -26,15 +32,39 @@ function App() {
       ]);
       setInput("");
 
-      // Simula una risposta automatica del bot dopo 1 secondo
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { text: "Ciao! Come posso aiutarti?", sender: "bot" },
-        ]);
-      }, 1000);
+      // Imposta il messaggio dell'utente per triggerare la chiamata SWR
+      setUserMessage(input);
     }
   };
+
+  // Utilizza SWR per ottenere la risposta del bot solo quando `userMessage` cambia
+  const { data, error } = useSWR(
+    userMessage
+      ? `https://mocki.io/v1/d0983da6-4f44-46a1-bd4a-d1b107d8fd82?message=${userMessage}`
+      : null,
+    fetcher
+  );
+
+  useEffect(() => {
+    if (data) {
+      // Aggiungi la risposta del bot ai messaggi
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: data.response, sender: "bot" },
+      ]);
+    }
+  }, [data]);
+
+  // Gestione degli errori e stato di caricamento
+  if (error) {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: "Si è verificato un errore nel recupero della risposta del bot.",
+        sender: "bot",
+      },
+    ]);
+  }
 
   return (
     <div className="flex flex-col h-screen justify-between">
